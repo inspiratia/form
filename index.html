@@ -1,1 +1,547 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Undangan Acara Rutin</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+  :root{
+    --deep: #10331f;
+    --forest: #1c4d2c;
+    --leaf: #2f7a3f;
+    --leaf-light: #4e9b57;
+    --gold: #c9a35a;
+    --cream: #f7f4ea;
+    --paper: #ffffff;
+    --ink: #16261a;
+    --muted: #5c6d5f;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+
+  body{
+    font-family:'Plus Jakarta Sans', sans-serif;
+    background: linear-gradient(180deg, var(--deep) 0%, var(--forest) 38%, var(--cream) 38%, var(--cream) 100%);
+    min-height:100vh;
+    color:var(--ink);
+    position:relative;
+    overflow-x:hidden;
+    padding-bottom:60px;
+  }
+
+  /* Falling leaves canvas */
+  #leafCanvas{
+    position:fixed;
+    top:0;left:0;width:100%;height:100%;
+    pointer-events:none;
+    z-index:0;
+  }
+
+  .wrap{
+    position:relative;
+    z-index:1;
+    max-width:480px;
+    margin:0 auto;
+    padding:0 20px;
+  }
+
+  /* Header */
+  .header{
+    padding:48px 0 34px;
+    text-align:center;
+    color:#eaf3ea;
+    animation: fadeDown .8s ease both;
+  }
+  @keyframes fadeDown{
+    from{opacity:0; transform:translateY(-16px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+
+  .badge{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(201,163,90,0.5);
+    color:var(--gold);
+    font-size:12px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    padding:6px 14px;
+    border-radius:999px;
+    margin-bottom:18px;
+  }
+
+  .header h1{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:32px;
+    line-height:1.2;
+    margin:0 0 10px;
+  }
+
+  .header p{
+    font-size:14.5px;
+    color:#cfe0d1;
+    margin:0;
+    line-height:1.5;
+  }
+
+  .divider-leaf{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    margin:22px 0 0;
+    opacity:.85;
+  }
+  .divider-leaf .line{
+    height:1px;
+    width:40px;
+    background:linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .divider-leaf svg{width:18px;height:18px;color:var(--gold);}
+
+  /* Card */
+  .card{
+    background:var(--paper);
+    border-radius:26px;
+    margin-top:-26px;
+    padding:30px 22px 26px;
+    box-shadow: 0 20px 50px -20px rgba(16,51,31,0.35), 0 2px 8px rgba(16,51,31,0.06);
+    position:relative;
+    animation: riseUp .7s .15s cubic-bezier(.2,.8,.2,1) both;
+  }
+  @keyframes riseUp{
+    from{opacity:0; transform:translateY(28px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+
+  .card::before{
+    content:"";
+    position:absolute;
+    top:-1px; left:50%;
+    transform:translateX(-50%);
+    width:52px;height:5px;
+    background:var(--gold);
+    border-radius:0 0 6px 6px;
+    opacity:.7;
+  }
+
+  .section-title{
+    font-family:'Fraunces', serif;
+    font-size:15px;
+    font-weight:600;
+    color:var(--forest);
+    margin:26px 0 14px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .section-title:first-of-type{margin-top:4px;}
+  .section-title svg{width:16px;height:16px;color:var(--leaf);}
+
+  .field{
+    margin-bottom:16px;
+    position:relative;
+  }
+
+  label{
+    display:block;
+    font-size:13px;
+    font-weight:600;
+    color:var(--forest);
+    margin-bottom:7px;
+  }
+  label .opt{
+    font-weight:400;
+    color:var(--muted);
+    font-size:11.5px;
+  }
+
+  input[type="text"], textarea{
+    width:100%;
+    border:1.5px solid #dfe7e0;
+    background:#fbfcfa;
+    border-radius:13px;
+    padding:12px 14px;
+    font-size:14.5px;
+    font-family:inherit;
+    color:var(--ink);
+    transition: border-color .2s, box-shadow .2s, background .2s;
+  }
+  textarea{resize:vertical; min-height:82px; line-height:1.5;}
+
+  input[type="text"]:focus, textarea:focus{
+    outline:none;
+    border-color:var(--leaf);
+    background:#fff;
+    box-shadow:0 0 0 4px rgba(47,122,63,0.12);
+  }
+
+  input::placeholder, textarea::placeholder{color:#a9b6ac;}
+
+  /* Checkbox cards */
+  .check-card{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    border:1.5px solid #dfe7e0;
+    background:#fbfcfa;
+    border-radius:14px;
+    padding:14px;
+    cursor:pointer;
+    transition: border-color .2s, background .2s, transform .15s;
+    margin-bottom:12px;
+  }
+  .check-card:active{transform:scale(0.985);}
+  .check-card.checked{
+    border-color:var(--leaf);
+    background:#eef7ef;
+  }
+
+  .check-box{
+    flex-shrink:0;
+    width:24px;height:24px;
+    border-radius:7px;
+    border:2px solid #c3d2c6;
+    background:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition: all .2s;
+    margin-top:1px;
+  }
+  .check-card.checked .check-box{
+    background:var(--leaf);
+    border-color:var(--leaf);
+  }
+  .check-box svg{
+    width:14px;height:14px;
+    color:#fff;
+    opacity:0;
+    transform:scale(0.5);
+    transition: all .2s cubic-bezier(.34,1.56,.64,1);
+  }
+  .check-card.checked .check-box svg{opacity:1; transform:scale(1);}
+
+  .check-text{font-size:13.8px; font-weight:600; color:var(--ink); line-height:1.4;}
+  .check-text span{display:block; font-weight:400; color:var(--muted); font-size:12px; margin-top:2px;}
+
+  .hint{font-size:11.5px; color:var(--muted); margin-top:6px; line-height:1.4;}
+
+  /* Submit button */
+  .submit-btn{
+    width:100%;
+    margin-top:22px;
+    background:linear-gradient(135deg, var(--leaf) 0%, var(--forest) 100%);
+    color:#fff;
+    border:none;
+    padding:16px;
+    border-radius:16px;
+    font-size:15.5px;
+    font-weight:700;
+    font-family:inherit;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:9px;
+    cursor:pointer;
+    box-shadow: 0 12px 24px -8px rgba(28,77,44,0.55);
+    transition: transform .15s, box-shadow .15s;
+    position:relative;
+    overflow:hidden;
+  }
+  .submit-btn:active{transform:scale(0.98);}
+  .submit-btn svg{width:19px;height:19px;}
+
+  .submit-btn::after{
+    content:"";
+    position:absolute;
+    top:0; left:-60%;
+    width:40%; height:100%;
+    background:linear-gradient(120deg, transparent, rgba(255,255,255,0.35), transparent);
+    animation: shine 3.2s ease-in-out infinite;
+  }
+  @keyframes shine{
+    0%{left:-60%;}
+    45%{left:120%;}
+    100%{left:120%;}
+  }
+
+  .error-msg{
+    display:none;
+    background:#fdeceb;
+    color:#a83a30;
+    font-size:12.5px;
+    padding:10px 12px;
+    border-radius:10px;
+    margin-top:14px;
+    text-align:center;
+    font-weight:600;
+  }
+
+  .footer-note{
+    text-align:center;
+    font-size:11.5px;
+    color:var(--muted);
+    margin-top:22px;
+    line-height:1.6;
+  }
+  .footer-note svg{width:12px;height:12px; vertical-align:-1px; color:var(--gold);}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important; transition:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="leafCanvas"></canvas>
+
+<div class="wrap">
+  <div class="header">
+    <div class="badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3c-4 4-4 9-4 9s5 0 9-4c2-2 2-6 2-6s-4 0-7 1z"/><path d="M12 12L3 21"/></svg>
+      Formulir Kehadiran
+    </div>
+    <h1>Undangan Acara Rutin</h1>
+    <p>Mari bergabung dalam majelis rutin kami. Isi data di bawah untuk mengonfirmasi kehadiranmu.</p>
+    <div class="divider-leaf">
+      <span class="line"></span>
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C7 6 5 11 5 15a7 7 0 0014 0c0-4-2-9-7-13z"/></svg>
+      <span class="line"></span>
+    </div>
+  </div>
+
+  <form class="card" id="inviteForm">
+
+    <div class="section-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Data Diri
+    </div>
+
+    <div class="field">
+      <label for="namaLengkap">Nama Lengkap</label>
+      <input type="text" id="namaLengkap" placeholder="Contoh: Ahmad Fauzan" required>
+    </div>
+
+    <div class="field">
+      <label for="namaPanggilan">Nama Panggilan</label>
+      <input type="text" id="namaPanggilan" placeholder="Contoh: Fauzan" required>
+    </div>
+
+    <div class="field">
+      <label for="alamat">Alamat Saat Ini</label>
+      <textarea id="alamat" placeholder="Tulis alamat domisili sekarang" required></textarea>
+    </div>
+
+    <div class="field">
+      <label for="hobi">Hobi</label>
+      <input type="text" id="hobi" placeholder="Contoh: Membaca, olahraga, dll" required>
+    </div>
+
+    <div class="field">
+      <label for="pekerjaan">Pekerjaan</label>
+      <input type="text" id="pekerjaan" placeholder="Contoh: Mahasiswa, Karyawan Swasta" required>
+    </div>
+
+    <div class="section-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      Konfirmasi
+    </div>
+
+    <div class="check-card" id="cardMuslim" onclick="toggleCheck('cardMuslim','chkMuslim')">
+      <div class="check-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
+      </div>
+      <div class="check-text">
+        Saya beragama Muslim / Islam
+        <span>Centang untuk mengonfirmasi</span>
+      </div>
+      <input type="checkbox" id="chkMuslim" style="display:none;">
+    </div>
+
+    <div class="check-card" id="cardHadir" onclick="toggleCheck('cardHadir','chkHadir')">
+      <div class="check-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
+      </div>
+      <div class="check-text">
+        Bersedia hadir rutin di acara
+        <span>Centang jika berkomitmen hadir setiap pertemuan</span>
+      </div>
+      <input type="checkbox" id="chkHadir" style="display:none;">
+    </div>
+
+    <div class="field">
+      <label for="alasan">Apa alasan mau hadir rutin? <span class="opt">(opsional)</span></label>
+      <textarea id="alasan" placeholder="Ceritakan alasanmu secara singkat"></textarea>
+    </div>
+
+    <div class="error-msg" id="errorMsg">Mohon lengkapi Nama, Alamat, Hobi, dan Pekerjaan terlebih dahulu.</div>
+
+    <button type="submit" class="submit-btn">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.6 6.32A7.85 7.85 0 0012.05 4a7.94 7.94 0 00-6.9 11.9L4 20l4.2-1.1a7.9 7.9 0 003.8 1h0a7.94 7.94 0 007.94-7.94 7.87 7.87 0 00-2.34-5.64zm-5.55 12.2h0a6.6 6.6 0 01-3.36-.92l-.24-.14-2.5.65.67-2.44-.16-.25a6.6 6.6 0 01-1-3.5 6.62 6.62 0 0111.29-4.68 6.58 6.58 0 011.94 4.68 6.62 6.62 0 01-6.64 6.6zm3.62-4.95c-.2-.1-1.17-.58-1.35-.64s-.32-.1-.45.1-.5.63-.62.76-.23.15-.43.05a5.4 5.4 0 01-1.6-.98 5.98 5.98 0 01-1.1-1.37c-.12-.2 0-.3.09-.4s.2-.23.3-.35a1.3 1.3 0 00.2-.33.37.37 0 000-.35c-.05-.1-.45-1.08-.62-1.48s-.33-.33-.45-.34h-.39a.74.74 0 00-.54.25 2.26 2.26 0 00-.7 1.68 3.93 3.93 0 00.83 2.08 9 9 0 003.44 3.04c.48.2.85.33 1.14.42a2.74 2.74 0 001.26.08c.38-.06 1.17-.48 1.34-.94s.17-.86.12-.94-.18-.14-.38-.24z"/></svg>
+      Kirim via WhatsApp
+    </button>
+
+    <div class="footer-note">
+      <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+      Data akan terkirim langsung ke panitia melalui WhatsApp
+    </div>
+  </form>
+</div>
+
+<script>
+  // Toggle checkbox card
+  function toggleCheck(cardId, inputId){
+    const card = document.getElementById(cardId);
+    const input = document.getElementById(inputId);
+    input.checked = !input.checked;
+    card.classList.toggle('checked', input.checked);
+  }
+
+  // Form submit -> Google Sheets + WhatsApp
+  const form = document.getElementById('inviteForm');
+  const errorMsg = document.getElementById('errorMsg');
+  const waNumber = "6289617868637";
+
+  // GANTI URL DI BAWAH INI dengan Web App URL dari Google Apps Script Anda
+  const SHEET_URL = "https://script.google.com/macros/s/AKfycbxbl_hPLDyZXzsbHWKS0VCdU4uhUKddcBBc7vf0zholYqWR9CjGcXsm__5y0_fcHYA/exec";
+
+  const submitBtn = form.querySelector('.submit-btn');
+  const btnLabel = submitBtn.innerHTML;
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+
+    const namaLengkap = document.getElementById('namaLengkap').value.trim();
+    const namaPanggilan = document.getElementById('namaPanggilan').value.trim();
+    const alamat = document.getElementById('alamat').value.trim();
+    const hobi = document.getElementById('hobi').value.trim();
+    const pekerjaan = document.getElementById('pekerjaan').value.trim();
+    const muslim = document.getElementById('chkMuslim').checked ? "Ya" : "Tidak";
+    const hadir = document.getElementById('chkHadir').checked ? "Ya, bersedia hadir rutin" : "Belum bersedia";
+    const alasan = document.getElementById('alasan').value.trim() || "-";
+
+    if(!namaLengkap || !alamat || !hobi || !pekerjaan){
+      errorMsg.style.display = "block";
+      errorMsg.scrollIntoView({behavior:"smooth", block:"center"});
+      return;
+    }
+    errorMsg.style.display = "none";
+
+    const payload = {
+      namaLengkap, namaPanggilan, alamat, hobi, pekerjaan,
+      muslim, hadir, alasan
+    };
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = "Mengirim...";
+
+    // Kirim ke Google Sheets (fire-and-forget, no-cors karena Apps Script tidak mendukung CORS preflight)
+    fetch(SHEET_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify(payload)
+    }).catch(function(err){
+      console.warn("Gagal kirim ke Sheets:", err);
+    }).finally(function(){
+      const pesan =
+`*UNDANGAN ACARA RUTIN - KONFIRMASI KEHADIRAN*
+
+Nama Lengkap: ${namaLengkap}
+Nama Panggilan: ${namaPanggilan}
+Alamat Saat Ini: ${alamat}
+Hobi: ${hobi}
+Pekerjaan: ${pekerjaan}
+Muslim/Islam: ${muslim}
+Bersedia Hadir Rutin: ${hadir}
+Alasan Hadir Rutin: ${alasan}`;
+
+      const url = `https://wa.me/${waNumber}?text=${encodeURIComponent(pesan)}`;
+      window.open(url, '_blank');
+
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = btnLabel;
+    });
+  });
+
+  // ---- Falling leaves animation ----
+  const canvas = document.getElementById('leafCanvas');
+  const ctx = canvas.getContext('2d');
+  let w, h;
+  function resize(){
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const leafCount = 14;
+  const leaves = [];
+  const colors = ['#2f7a3f', '#4e9b57', '#c9a35a', '#1c4d2c'];
+
+  function makeLeaf(){
+    return {
+      x: Math.random()*w,
+      y: Math.random()*-h,
+      size: 8 + Math.random()*10,
+      speedY: 0.4 + Math.random()*0.8,
+      speedX: Math.random()*0.6 - 0.3,
+      rot: Math.random()*360,
+      rotSpeed: (Math.random()*2 - 1) * 1.2,
+      sway: Math.random()*2*Math.PI,
+      swaySpeed: 0.01 + Math.random()*0.02,
+      color: colors[Math.floor(Math.random()*colors.length)],
+      opacity: 0.35 + Math.random()*0.4
+    };
+  }
+
+  for(let i=0;i<leafCount;i++){ leaves.push(makeLeaf()); }
+
+  function drawLeaf(l){
+    ctx.save();
+    ctx.translate(l.x, l.y);
+    ctx.rotate(l.rot * Math.PI/180);
+    ctx.globalAlpha = l.opacity;
+    ctx.fillStyle = l.color;
+    ctx.beginPath();
+    ctx.moveTo(0, -l.size);
+    ctx.bezierCurveTo(l.size*0.8, -l.size*0.4, l.size*0.8, l.size*0.6, 0, l.size);
+    ctx.bezierCurveTo(-l.size*0.8, l.size*0.6, -l.size*0.8, -l.size*0.4, 0, -l.size);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function animate(){
+    ctx.clearRect(0,0,w,h);
+    leaves.forEach(l=>{
+      l.y += l.speedY;
+      l.sway += l.swaySpeed;
+      l.x += l.speedX + Math.sin(l.sway)*0.5;
+      l.rot += l.rotSpeed;
+      if(l.y > h + 20){
+        Object.assign(l, makeLeaf());
+        l.y = -20;
+      }
+      drawLeaf(l);
+    });
+    if(!prefersReduced) requestAnimationFrame(animate);
+  }
+  if(!prefersReduced){
+    animate();
+  } else {
+    leaves.forEach(l=>{ l.y = Math.random()*h; drawLeaf(l); });
+  }
+</script>
+
+</body>
+</html>
 
